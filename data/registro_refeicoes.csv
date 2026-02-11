@@ -1,0 +1,9 @@
+data,refeicao,descricao,categoria
+2026-02-01,cafe_da_manha,pao branco com manteiga,refinado
+2026-02-01,almoco,arroz frango batata frita,caseiro
+2026-02-01,lanche,biscoito recheado,ultraprocessado
+2026-02-01,jantar,massa com molho pronto,processado
+2026-02-02,cafe_da_manha,cereal com leite,processado
+2026-02-02,almoco,arroz feijao carne salada,caseiro
+2026-02-02,lanche,iogurte,processado
+2026-02-02,jantar,sanduiche,processado
