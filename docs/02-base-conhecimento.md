@@ -1,20 +1,13 @@
 # Base de Conhecimento
 
-> [!TIP]
-> **Prompt usado para esta etapa:**
-> 
-> Organize a base de conhecimento do agente "Edu" usando os 4 arquivos da pasta `data/` (em anexo). Explique pra que serve cada arquivo e monte um exemplo de contexto formatado que será enviado pro LLM. Preencha o template abaixo.
->
-> [cole ou anexe o template `02-base-conhecimento.md` pra contexto]
-
 ## Dados Utilizados
 
-| Arquivo | Formato | Para que serve no Edu? |
-|---------|---------|---------------------|
-| `historico_atendimento.csv` | CSV | Contextualizar interações anteriores, ou seja, dar continuidade ao atendimento de forma mais eficiente. |
-| `perfil_investidor.json` | JSON | Personalizar as explicações sobre as dúvidas e necessidades de aprendizado do cliente. |
-| `produtos_financeiros.json` | JSON | Conhecer os produtos disponíveis para que eles possam ser ensinados ao cliente. |
-| `transacoes.csv` | CSV | Analisar padrão de gastos do cliente e usar essas informações de forma didática. |
+| Arquivo | Formato | Para que serve no Nutrix? |
+|---------|---------|---------------------------|
+| `historico_orientacoes.csv` | CSV | Contextualizar orientações já explicadas ao usuário e manter continuidade educativa. |
+| `perfil_usuario.json` | JSON | Personalizar as explicações conforme rotina, restrições e objetivos alimentares. |
+| `guia_nutrientes.json` | JSON | Fornecer a base conceitual de nutrientes para ensino didático. |
+| `registro_refeicoes.csv` | CSV | Analisar padrões de refeições e usar exemplos práticos nas explicações. |
 
 ---
 
@@ -22,7 +15,7 @@
 
 > Você modificou ou expandiu os dados mockados? Descreva aqui.
 
-O produto Fundo Imobiliário (FII) substituiu o Fundo Multimercado, pois pessoalmente me sinto mais confiante em usar apenas produtos financeiros que eu conheço. Assim, poderei validar as respostas do Edu de forma mais assertiva.
+Os nutrientes foram organizados por função prática (energia, construção corporal, regulação e saúde intestinal) em vez de classificação técnica completa. Isso facilita explicações didáticas e reduz complexidade desnecessária para o público iniciante.
 
 ---
 
@@ -37,105 +30,74 @@ Existem duas possibilidades, injetar os dados diretamente no prompt (Ctrl + C, C
 import pandas as pd
 import json
 
-perfil = json.load(open('./data/perfil_investidor.json'))
-transacoes = pd.read_csv('./data/transacoes.csv')
-historico = pd.read_csv('./data/historico_atendimento.csv')
-produtos = json.load(open('./data/produtos_financeiros.json'))
+perfil = json.load(open('./data/perfil_usuario.json'))
+refeicoes = pd.read_csv('./data/registro_refeicoes.csv')
+historico = pd.read_csv('./data/historico_orientacoes.csv')
+nutrientes = json.load(open('./data/guia_nutrientes.json'))
+
 ```
 
 ### Como os dados são usados no prompt?
 > Os dados vão no system prompt? São consultados dinamicamente?
 
-Para simplificar, podemos simplesmente "injetar" os dados em nosso prompt, agarntindo que o Agente tenha o melhor contexto possível. Lembrando que, em soluções mais robustas, o ideal é que essas informaçoes sejam carregadas dinamicamente para que possamos ganhar flexibilidade.
+Para simplificar, podemos simplesmente injetar os dados no prompt, garantindo que o agente tenha o melhor contexto possível. Em soluções mais robustas, o ideal é consultar essas informações dinamicamente conforme o tema da pergunta.
 
 ```text
-DADOS DO CLIENTE E PERFIL (data/perfil_investidor.json):
+DADOS DO USUÁRIO (data/perfil_usuario.json):
 {
-  "nome": "João Silva",
-  "idade": 32,
-  "profissao": "Analista de Sistemas",
-  "renda_mensal": 5000.00,
-  "perfil_investidor": "moderado",
-  "objetivo_principal": "Construir reserva de emergência",
-  "patrimonio_total": 15000.00,
-  "reserva_emergencia_atual": 10000.00,
-  "aceita_risco": false,
-  "metas": [
-    {
-      "meta": "Completar reserva de emergência",
-      "valor_necessario": 15000.00,
-      "prazo": "2026-06"
-    },
-    {
-      "meta": "Entrada do apartamento",
-      "valor_necessario": 50000.00,
-      "prazo": "2027-12"
-    }
-  ]
+  "nome": "Maria Souza",
+  "idade": 29,
+  "rotina": "trabalho em escritório",
+  "objetivo_alimentar": "melhorar qualidade da alimentação",
+  "restricoes": ["intolerância à lactose"],
+  "refeicoes_por_dia": 4,
+  "consumo_agua_estimado_ml": 1200,
+  "nivel_conhecimento_nutricao": "iniciante"
 }
 
-TRANSACOES DO CLIENTE (data/transacoes.csv):
-data,descricao,categoria,valor,tipo
-2025-10-01,Salário,receita,5000.00,entrada
-2025-10-02,Aluguel,moradia,1200.00,saida
-2025-10-03,Supermercado,alimentacao,450.00,saida
-2025-10-05,Netflix,lazer,55.90,saida
-2025-10-07,Farmácia,saude,89.00,saida
-2025-10-10,Restaurante,alimentacao,120.00,saida
-2025-10-12,Uber,transporte,45.00,saida
-2025-10-15,Conta de Luz,moradia,180.00,saida
-2025-10-20,Academia,saude,99.00,saida
-2025-10-25,Combustível,transporte,250.00,saida
+REGISTRO DE REFEIÇÕES (data/registro_refeicoes.csv):
+data,refeicao,descricao,categoria
+2026-02-01,cafe_da_manha,pao branco com manteiga,refinado
+2026-02-01,almoco,arroz frango batata frita,caseiro
+2026-02-01,lanche,biscoito recheado,ultraprocessado
+2026-02-01,jantar,massa com molho pronto,processado
+2026-02-02,cafe_da_manha,cereal com leite,processado
+2026-02-02,almoco,arroz feijao carne salada,caseiro
+2026-02-02,lanche,iogurte,processado
+2026-02-02,jantar,sanduiche,processado
 
-HISTORICO DE ATENDIMENTO DO CLIENTE (data/historico_atendimento.csv):
+HISTORICO DE ORIENTAÇÕES (data/historico_orientacoes.csv):
 data,canal,tema,resumo,resolvido
-2025-09-15,chat,CDB,Cliente perguntou sobre rentabilidade e prazos,sim
-2025-09-22,telefone,Problema no app,Erro ao visualizar extrato foi corrigido,sim
-2025-10-01,chat,Tesouro Selic,Cliente pediu explicação sobre o funcionamento do Tesouro Direto,sim
-2025-10-12,chat,Metas financeiras,Cliente acompanhou o progresso da reserva de emergência,sim
-2025-10-25,email,Atualização cadastral,Cliente atualizou e-mail e telefone,sim
+2026-01-20,chat,proteinas,explicacao sobre funcao das proteinas,sim
+2026-01-25,chat,hidratacao,orientacao sobre consumo de agua,sim
+2026-01-28,chat,rotulos,como ler tabela nutricional,sim
+2026-02-02,chat,fibras,beneficios das fibras na dieta,sim
 
-PRODUTOS DISPONIVEIS PARA ENSINO (data/produtos_financeiros.json):
+GUIA DE NUTRIENTES (data/guia_nutrientes.json):
 [
   {
-    "nome": "Tesouro Selic",
-    "categoria": "renda_fixa",
-    "risco": "baixo",
-    "rentabilidade": "100% da Selic",
-    "aporte_minimo": 30.00,
-    "indicado_para": "Reserva de emergência e iniciantes"
+    "nome": "Carboidratos",
+    "funcao": "fornecer energia",
+    "exemplos": ["arroz", "pão", "massa", "batata", "aveia"],
+    "observacao": "preferir integrais quando possível"
   },
   {
-    "nome": "CDB Liquidez Diária",
-    "categoria": "renda_fixa",
-    "risco": "baixo",
-    "rentabilidade": "102% do CDI",
-    "aporte_minimo": 100.00,
-    "indicado_para": "Quem busca segurança com rendimento diário"
+    "nome": "Proteínas",
+    "funcao": "construção e reparo do corpo",
+    "exemplos": ["frango", "ovos", "feijão", "peixe"],
+    "observacao": "importante nas refeições principais"
   },
   {
-    "nome": "LCI/LCA",
-    "categoria": "renda_fixa",
-    "risco": "baixo",
-    "rentabilidade": "95% do CDI",
-    "aporte_minimo": 1000.00,
-    "indicado_para": "Quem pode esperar 90 dias (isento de IR)"
+    "nome": "Gorduras boas",
+    "funcao": "função hormonal e absorção de vitaminas",
+    "exemplos": ["azeite", "castanhas", "abacate"],
+    "observacao": "usar com moderação"
   },
   {
-    "nome": "Fundo Imobiliário (FII)",
-    "categoria": "fundo",
-    "risco": "medio",
-    "rentabilidade": "Dividend Yield (DY) costuma ficar entre 6% a 12% ao ano",
-    "aporte_minimo": 100.00,
-    "indicado_para": "Perfil moderado que busca diversificação e renda recorrente mensal"
-  },
-  {
-    "nome": "Fundo de Ações",
-    "categoria": "fundo",
-    "risco": "alto",
-    "rentabilidade": "Variável",
-    "aporte_minimo": 100.00,
-    "indicado_para": "Perfil arrojado com foco no longo prazo"
+    "nome": "Fibras",
+    "funcao": "saúde intestinal e saciedade",
+    "exemplos": ["verduras", "legumes", "grãos integrais"],
+    "observacao": "aumentar consumo gradualmente"
   }
 ]
 ```
@@ -146,27 +108,25 @@ PRODUTOS DISPONIVEIS PARA ENSINO (data/produtos_financeiros.json):
 
 > Mostre um exemplo de como os dados são formatados para o agente.
 
-O exemplo de contexto montado abaixo, se baiseia nos dados originais da base de conhecimento, mas os sintetiza deixando apenas as informações mais relevantes, otimizando assim o consumo de tokens. Entretanto, vale lembrar que mais importante do que economizar tokens, é ter todas as informações relevantes disponíveis em seu contexto.
+O exemplo de contexto abaixo sintetiza os dados originais e mantém apenas as informações mais relevantes para reduzir consumo de tokens, sem perder qualidade educativa.
 
 ```
-DADOS DO CLIENTE:
-- Nome: João Silva
-- Perfil: Moderado
-- Objetivo: Construir reserva de emergência
-- Reserva atual: R$ 10.000 (meta: R$ 15.000)
+DADOS DO USUÁRIO:
+- Nome: Maria Souza
+- Objetivo: melhorar qualidade da alimentação
+- Restrição: intolerância à lactose
+- Refeições por dia: 4
+- Nível: iniciante
 
-RESUMO DE GASTOS:
-- Moradia: R$ 1.380
-- Alimentação: R$ 570
-- Transporte: R$ 295
-- Saúde: R$ 188
-- Lazer: R$ 55,90
-- Total de saídas: R$ 2.488,90
+PADRÃO RECENTE DE REFEIÇÕES:
+- Café da manhã frequente: pão branco ou cereal processado
+- Almoço: base caseira, porém com fritura em alguns dias
+- Lanches: ultraprocessados
+- Baixo consumo de integrais e fibras
 
-PRODUTOS DISPONÍVEIS PARA EXPLICAR:
-- Tesouro Selic (risco baixo)
-- CDB Liquidez Diária (risco baixo)
-- LCI/LCA (risco baixo)
-- Fundo Imobiliário - FII (risco médio)
-- Fundo de Ações (risco alto)
+CONCEITOS DISPONÍVEIS PARA ENSINO:
+- Carboidratos = energia
+- Proteínas = construção corporal
+- Gorduras boas = função hormonal
+- Fibras = saúde intestinal e saciedade
 ```
