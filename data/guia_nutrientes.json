@@ -1,0 +1,26 @@
+[
+  {
+    "nome": "Carboidratos",
+    "funcao": "fornecer energia",
+    "exemplos": ["arroz", "pão", "massa", "batata", "aveia"],
+    "observacao": "preferir integrais quando possível"
+  },
+  {
+    "nome": "Proteínas",
+    "funcao": "construção e reparo do corpo",
+    "exemplos": ["frango", "ovos", "feijão", "peixe"],
+    "observacao": "importante em todas as refeições principais"
+  },
+  {
+    "nome": "Gorduras boas",
+    "funcao": "função hormonal e absorção de vitaminas",
+    "exemplos": ["azeite", "castanhas", "abacate"],
+    "observacao": "usar com moderação"
+  },
+  {
+    "nome": "Fibras",
+    "funcao": "saúde intestinal e saciedade",
+    "exemplos": ["verduras", "legumes", "grãos integrais"],
+    "observacao": "aumentar consumo gradualmente"
+  }
+]
