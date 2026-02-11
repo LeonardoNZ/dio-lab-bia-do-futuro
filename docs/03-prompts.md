@@ -137,4 +137,5 @@ Mais sobre Few-Shot Prompts no artigo [Zero, One e Few-Shot Prompts: Entendendo 
 - O prompt reforça limites claros contra prescrição de dieta para evitar aconselhamento profissional.
 - As respostas foram limitadas a poucos parágrafos para manter didática e objetividade.
 - Os exemplos usam linguagem simples e analogias para combinar com o público iniciante.
+- testados em diferentes IAs, onde os casos se saíram muito bem para os escopos delimitados aos quais criei.
 
