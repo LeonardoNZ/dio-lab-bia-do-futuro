@@ -1,0 +1,10 @@
+{
+  "nome": "Maria Souza",
+  "idade": 29,
+  "rotina": "trabalho em escritório",
+  "objetivo_alimentar": "melhorar qualidade da alimentação",
+  "restricoes": ["intolerância à lactose"],
+  "refeicoes_por_dia": 4,
+  "consumo_agua_estimado_ml": 1200,
+  "nivel_conhecimento_nutricao": "iniciante"
+}
