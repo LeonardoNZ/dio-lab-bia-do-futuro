@@ -22,7 +22,6 @@ Os nutrientes foram organizados por função prática (energia, construção cor
 ## Estratégia de Integração
 
 ### Como os dados são carregados?
-> Descreva como seu agente acessa a base de conhecimento.
 
 Existem duas possibilidades, injetar os dados diretamente no prompt (Ctrl + C, Ctrl + V) ou carregar os arquivos via código, como no exemplo abaixo:
 
@@ -105,8 +104,6 @@ GUIA DE NUTRIENTES (data/guia_nutrientes.json):
 ---
 
 ## Exemplo de Contexto Montado
-
-> Mostre um exemplo de como os dados são formatados para o agente.
 
 O exemplo de contexto abaixo sintetiza os dados originais e mantém apenas as informações mais relevantes para reduzir consumo de tokens, sem perder qualidade educativa.
 
