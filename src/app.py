@@ -2,10 +2,11 @@ import json
 import pandas as pd
 import requests
 import streamlit as st
+from pathlib import Path
 
 # ================= CONFIG =================
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODELO = "gpt-oss"
+MODELO = "llama3"
 
 st.set_page_config(
     page_title="Nutrix — Educador Alimentar",
@@ -14,139 +15,151 @@ st.set_page_config(
 )
 
 # ================= LOAD DATA =================
+
+DATA_DIR = Path("./data")
+
 @st.cache_data
 def load_data():
-    perfil = json.load(open('./data/perfil_usuario.json'))
-    refeicoes = pd.read_csv('./data/refeicoes.csv')
-    historico = pd.read_csv('./data/historico_atendimento.csv')
-    alimentos = json.load(open('./data/base_alimentos.json'))
+    try:
+        perfil = json.load(open(DATA_DIR / "perfil_usuario.json", encoding="utf-8"))
+    except:
+        perfil = {}
+
+    try:
+        refeicoes = pd.read_csv(DATA_DIR / "registro_refeicoes.csv")
+    except:
+        refeicoes = pd.DataFrame()
+
+    try:
+        historico = pd.read_csv(DATA_DIR / "historico_orientacoes.csv")
+    except:
+        historico = pd.DataFrame()
+
+    try:
+        alimentos = json.load(open(DATA_DIR / "guia_nutrientes.json", encoding="utf-8"))
+    except:
+        alimentos = {}
+
     return perfil, refeicoes, historico, alimentos
+
 
 perfil, refeicoes, historico, alimentos = load_data()
 
 # ================= CONTEXTO =================
+
+def df_to_text(df):
+    if df is None or df.empty:
+        return "Sem registros."
+    return df.to_string(index=False)
+
 contexto = f"""
-USUÁRIO: {perfil['nome']}, {perfil['idade']} anos
-OBJETIVO ALIMENTAR: {perfil['objetivo']}
-RESTRIÇÕES: {perfil['restricoes']}
+OBJETIVO ALIMENTAR: {perfil.get('objetivo','não informado')}
+RESTRIÇÕES: {perfil.get('restricoes','não informado')}
 
 REGISTRO DE REFEIÇÕES:
-{refeicoes.to_string(index=False)}
+{df_to_text(refeicoes)}
 
 ATENDIMENTOS ANTERIORES:
-{historico.to_string(index=False)}
+{df_to_text(historico)}
 
 BASE DE ALIMENTOS:
-{json.dumps(alimentos, indent=2, ensure_ascii=False)}
+{json.dumps(alimentos, ensure_ascii=False)}
 """
 
 # ================= SYSTEM PROMPT =================
+
 SYSTEM_PROMPT = """Você é o Nutrix, um educador de alimentação básica amigável, didático e responsável.
 
 MISSÃO:
-Ajudar o usuário a entender conceitos de nutrição e hábitos alimentares saudáveis de forma simples e prática. Você educa — não prescreve. Usa os dados fornecidos do usuário apenas como exemplos ilustrativos.
+Explicar conceitos de nutrição e hábitos saudáveis de forma simples. Você educa — não prescreve.
 
-ESCOPO DE ATUAÇÃO:
-Você pode explicar:
-- nutrientes (carboidratos, proteínas, gorduras, fibras, vitaminas);
-- equilíbrio alimentar;
-- leitura de rótulos;
-- organização básica de refeições;
-- hábitos saudáveis do dia a dia;
-- diferenças entre alimentos in natura, processados e ultraprocessados.
+PROIBIDO:
+- prescrever dietas
+- definir quantidades individuais
+- tratar doenças
+- substituir profissional de saúde
 
-Você NÃO pode:
-- prescrever dietas ou cardápios personalizados;
-- definir quantidades exatas de consumo individual;
-- tratar doenças com alimentação;
-- substituir nutricionista, médico ou outro profissional de saúde.
+PERMITIDO:
+- explicar nutrientes
+- explicar rótulos
+- explicar equilíbrio alimentar
+- explicar hábitos saudáveis
 
-REGRAS DE SEGURANÇA:
-- NUNCA forneça prescrição alimentar personalizada;
-- NUNCA recomende tratamento de saúde;
-- Sempre inclua orientação para procurar profissional quando envolver condição clínica;
-- Se o usuário pedir algo fora do escopo, responda lembrando seu papel educativo;
-- Se faltarem dados, diga explicitamente que não tem informação suficiente.
-
-USO DOS DADOS DO USUÁRIO:
-- Use os dados fornecidos apenas como exemplo didático;
-- Não faça julgamentos sobre hábitos alimentares;
-- Destaque padrões e explique conceitos com base neles;
-- Evite linguagem de culpa ou crítica.
-
-ESTILO DE RESPOSTA:
-- Linguagem simples, direta e amigável;
-- Explique com analogias do cotidiano quando útil;
-- Priorize clareza sobre termos técnicos;
-- Seja objetivo (máximo 3 parágrafos);
-- Sempre que possível finalize perguntando se o usuário entendeu.
-
-INCERTEZA:
-Quando não souber algo, diga:
-"Não tenho essa informação específica, mas posso explicar o conceito geral relacionado."
-
-PRIORIDADE DE COMPORTAMENTO:
-Segurança > Escopo educativo > Clareza > Personalização didática.
+Estilo:
+- simples
+- direto
+- amigável
+- até 3 parágrafos
+- sem termos técnicos desnecessários
+- finalize perguntando se o usuário entendeu.
 """
 
 # ================= OLLAMA CALL =================
+
 def perguntar(msg):
+
     prompt = f"""
 {SYSTEM_PROMPT}
 
-CONTEXTO DO USUÁRIO:
+CONTEXTO:
 {contexto}
 
-Pergunta do usuário: {msg}
+Pergunta: {msg}
 """
 
-    r = requests.post(
-        OLLAMA_URL,
-        json={"model": MODELO, "prompt": prompt, "stream": False}
-    )
+    try:
+        r = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": MODELO,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=180
+        )
 
-    return r.json()['response']
+        r.raise_for_status()
+        data = r.json()
 
-# ================= SIDEBAR =================
-with st.sidebar:
-    st.header("👤 Perfil do Usuário")
-    st.write(f"**Nome:** {perfil['nome']}")
-    st.write(f"**Idade:** {perfil['idade']}")
-    st.write(f"**Objetivo:** {perfil['objetivo']}")
-    st.write(f"**Restrições:** {perfil['restricoes']}")
+        return data.get("response", "Sem resposta do modelo.")
 
-    st.divider()
-    st.caption("Nutrix é educativo e não prescreve dietas.")
+    except requests.exceptions.ConnectionError:
+        return "⚠️ Ollama não está rodando. Abra o Ollama e rode: ollama run llama3"
 
-    if st.button("📊 Ver últimas refeições"):
-        st.dataframe(refeicoes.tail(5))
+    except Exception as e:
+        return f"⚠️ Erro ao consultar modelo local: {e}"
 
-# ================= HEADER =================
+
+# ================= UI =================
+
 st.title("🥗 Nutrix — Educador Alimentar")
-st.caption("Aprenda nutrição básica de forma simples. Sem dietas, sem prescrição.")
+st.caption("Aprenda nutrição básica de forma simples. Sem dietas. Sem prescrição.")
+
+st.success("🤖 Agente educativo ativo • Modelo local (Ollama)")
 
 st.info("Pergunte sobre nutrientes, rótulos, hábitos alimentares e equilíbrio nutricional.")
 
-# ================= CHAT MEMORY =================
+# ================= CHAT =================
+
 if "chat" not in st.session_state:
     st.session_state.chat = []
 
 for role, content in st.session_state.chat:
     st.chat_message(role).write(content)
 
-# ================= INPUT =================
 pergunta = st.chat_input("Digite sua dúvida sobre alimentação...")
 
 if pergunta:
     st.session_state.chat.append(("user", pergunta))
     st.chat_message("user").write(pergunta)
 
-    with st.spinner("Nutrix está explicando..."):
+    with st.spinner("Nutrix está pensando..."):
         resposta = perguntar(pergunta)
 
     st.session_state.chat.append(("assistant", resposta))
     st.chat_message("assistant").write(resposta)
 
 # ================= FOOTER =================
+
 st.divider()
-st.caption("⚠️ Conteúdo educativo. Procure um nutricionista para orientação personalizada.")
+st.caption("⚠️ Conteúdo educativo. Procure nutricionista para orientação personalizada.")
